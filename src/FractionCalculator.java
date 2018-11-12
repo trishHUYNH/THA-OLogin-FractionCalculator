@@ -1,8 +1,10 @@
 public class FractionCalculator {
 
     public static class Fraction {
+        int wholeNumber;
         int numerator;
         int denominator;
+        boolean isMixed;
 
         public Fraction(String fraction) {
             parseFraction(fraction);
@@ -11,34 +13,54 @@ public class FractionCalculator {
         public Fraction(int num, int denom) {
             numerator = num;
             denominator = denom;
+            isMixed = false;
         }
 
         // Simplifies fraction to final form
         // 2/4 -> 1/2
         public void simplify() {
+            int greatestCommon = 1;
 
+            // Start at 1 to avoid dividing by 0
+            for(int i = 1; i <= numerator && i <= denominator; i++)  {
+                // Checks if i is factor of both integers
+                if(numerator % i == 0 && denominator % i == 0)
+                    greatestCommon = i;
+            }
+
+            numerator = numerator / greatestCommon;
+            denominator = denominator / greatestCommon;
         }
 
+        // Converts mixed fraction to improper fraction
         // 3_3/4 = 15/4
-        // (Denominator * whole number) + numerator / denominator
-        public void mixedToImproper(String mixedFraction) {
+        public void mixedToImproper() {
 
-            String[] splitFraction = mixedFraction.split("");
-            int wholeNum = Integer.parseInt(splitFraction[0]);
-            int num = Integer.parseInt(splitFraction[2]);
-            int denom = Integer.parseInt(splitFraction[4]);
-
-            // (Denominator * whole number) + numerator
-            numerator = (denom * wholeNum)  + num;
-            denominator = denom;
+            numerator = (denominator * wholeNumber) + numerator;
+            wholeNumber = 0;
+            isMixed = false;
         }
 
-        public void improperToMixed() {
+        // Convert improper fraction to mixed fraction
+        // 7/4 = 1_3/4
+        public void improperToMixed(Fraction improperFraction) {
+
+            wholeNumber = improperFraction.numerator / improperFraction.denominator;
+            numerator = improperFraction.numerator % improperFraction.denominator;
+            denominator = improperFraction.denominator;
+            isMixed = true;
 
         }
 
+        // Returns fraction in String format
         public String prettyPrintFraction() {
-            return numerator + "/" + denominator;
+            String prettyFraction = null;
+            if (isMixed) {
+                prettyFraction = wholeNumber + "_" + numerator + "/" + denominator;
+            } else {
+                prettyFraction = numerator + "/" + denominator;
+            }
+            return prettyFraction;
         }
 
         // Parses string into numerator and denominator
@@ -46,13 +68,20 @@ public class FractionCalculator {
         // 1/2, 3_3/4, 2
         private void parseFraction(String fraction) {
 
+            String[] splitFraction = fraction.split("");
+
             if (fraction.contains("_")) {
                 // Fraction is mixed number, change it to improper fraction
-                mixedToImproper(fraction);
+                wholeNumber = Integer.parseInt(splitFraction[0]);
+                numerator = Integer.parseInt(splitFraction[2]);
+                denominator = Integer.parseInt(splitFraction[4]);
+                isMixed = true;
+
+
             } else {
 
-                String[] splitFraction = fraction.split("");
                 numerator = Integer.parseInt(splitFraction[0]);
+                isMixed = false;
 
                 if (splitFraction.length == 1) {
                     denominator = 1;
@@ -116,7 +145,19 @@ public class FractionCalculator {
 
         if (fractionA.denominator != fractionB.denominator) {
             // Find common denominator
-            return new Fraction(1, 2);
+            int commonDenominator = findCommonDenom(fractionA, fractionB);
+
+            if (fractionA.denominator != commonDenominator) {
+                fractionA.numerator = (commonDenominator / fractionA.denominator) * fractionA.numerator;
+                fractionA.denominator = (commonDenominator / fractionA.denominator) * fractionA.denominator;
+            }
+
+            if (fractionB.denominator != commonDenominator) {
+                fractionB.numerator = (commonDenominator / fractionB.denominator) * fractionB.numerator;
+                fractionB.denominator = (commonDenominator / fractionB.denominator) * fractionB.denominator;
+            }
+
+            return new Fraction(fractionA.numerator + fractionB.numerator, fractionA.denominator);
         } else {
             return new Fraction(fractionA.numerator + fractionB.numerator, fractionA.denominator);
         }
@@ -126,7 +167,18 @@ public class FractionCalculator {
     private static Fraction subtract(Fraction fractionA, Fraction fractionB) {
         if (fractionA.denominator != fractionB.denominator) {
             // Find common denominator
-            return new Fraction(1, 2);
+            int commonDenominator = findCommonDenom(fractionA, fractionB);
+
+            if (fractionA.denominator != commonDenominator) {
+                fractionA.numerator = (commonDenominator / fractionA.denominator) * fractionA.numerator;
+                fractionA.denominator = (commonDenominator / fractionA.denominator) * fractionA.denominator;
+            }
+
+            if (fractionB.denominator != commonDenominator) {
+                fractionB.numerator = (commonDenominator / fractionB.denominator) * fractionB.numerator;
+                fractionB.denominator = (commonDenominator / fractionB.denominator) * fractionB.denominator;
+            }
+            return new Fraction(fractionA.numerator - fractionB.numerator, fractionA.denominator);
         } else {
             return new Fraction(fractionA.numerator - fractionB.numerator, fractionA.denominator);
         }
@@ -144,12 +196,29 @@ public class FractionCalculator {
     }
 
     // Finds common denominator between fractions
-    private static void findCommonDenom() {
+    private static int findCommonDenom(Fraction fractionA, Fraction fractionB) {
+
+        int greatestCommon = 1;
+        int denominatorA = fractionA.denominator;
+        int denominatorB = fractionB.denominator;
+
+        // Start at 1 to avoid dividing by 0
+        for(int i = 1; i <= denominatorA && i <= denominatorB; i++)  {
+            // Checks if i is factor of both integers
+            if(denominatorA % i == 0 && denominatorB % i == 0)
+                greatestCommon = i;
+        }
+
+        return (denominatorA * fractionB.denominator) / greatestCommon;
 
     }
 
     public static void main(String[] args) {
-        String input = "1/2 / 1/6";
-        System.out.println(calculateInput(input).prettyPrintFraction());
+        String input = "1/2 + 1/6";
+
+        Fraction result = calculateInput(input);
+        result.simplify();
+
+        System.out.println(result.prettyPrintFraction());
     }
 }
