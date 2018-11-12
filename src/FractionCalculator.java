@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 public class FractionCalculator {
 
     public static class Fraction {
@@ -5,6 +7,7 @@ public class FractionCalculator {
         int numerator;
         int denominator;
         boolean isMixed;
+        boolean isImproper;
 
         public Fraction(String fraction) {
             parseFraction(fraction);
@@ -14,6 +17,7 @@ public class FractionCalculator {
             numerator = num;
             denominator = denom;
             isMixed = false;
+            isImproper = (num > denom) ? true : false;
         }
 
         // Simplifies fraction to final form
@@ -39,16 +43,18 @@ public class FractionCalculator {
             numerator = (denominator * wholeNumber) + numerator;
             wholeNumber = 0;
             isMixed = false;
+            isImproper = true;
         }
 
         // Convert improper fraction to mixed fraction
         // 7/4 = 1_3/4
-        public void improperToMixed(Fraction improperFraction) {
+        public void improperToMixed() {
 
-            wholeNumber = improperFraction.numerator / improperFraction.denominator;
-            numerator = improperFraction.numerator % improperFraction.denominator;
-            denominator = improperFraction.denominator;
+            wholeNumber = numerator / denominator;
+            numerator = numerator % denominator;
+            denominator = denominator;
             isMixed = true;
+            isImproper = false;
 
         }
 
@@ -76,6 +82,7 @@ public class FractionCalculator {
                 numerator = Integer.parseInt(splitFraction[2]);
                 denominator = Integer.parseInt(splitFraction[4]);
                 isMixed = true;
+                mixedToImproper();
 
 
             } else {
@@ -83,11 +90,15 @@ public class FractionCalculator {
                 numerator = Integer.parseInt(splitFraction[0]);
                 isMixed = false;
 
+
+
                 if (splitFraction.length == 1) {
                     denominator = 1;
                 } else if (splitFraction.length == 3) {
                     denominator = Integer.parseInt(splitFraction[2]);
                 }
+
+                isImproper = (numerator > denominator) ? true : false;
             }
 
         }
@@ -110,22 +121,18 @@ public class FractionCalculator {
         switch(operator) {
 
             case "+":
-                System.out.println("Addition");
                 result = add(fractionA, fractionB);
                 break;
 
             case "-":
-                System.out.println("Subtraction");
                 result = subtract(fractionA, fractionB);
                 break;
 
             case "*":
-                System.out.println("Multiplication");
                 result = multiply(fractionA, fractionB);
                 break;
 
             case "/":
-                System.out.println("Division");
                 result =  divide(fractionA, fractionB);
                 break;
 
@@ -214,11 +221,25 @@ public class FractionCalculator {
     }
 
     public static void main(String[] args) {
-        String input = "1/2 + 1/6";
 
-        Fraction result = calculateInput(input);
-        result.simplify();
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter fraction calculation or 'Q' to quit: ");
+        String input = scanner.nextLine();
 
-        System.out.println(result.prettyPrintFraction());
+        do {
+            Fraction result = calculateInput(input);
+            result.simplify();
+
+            if (result.isImproper) {
+                result.improperToMixed();
+            }
+
+            System.out.println("Result: " + result.prettyPrintFraction());
+
+            System.out.print("Enter fraction calculation or 'Q' to quit: ");
+            input = scanner.nextLine();
+        }
+
+        while (!input.equals("q") || !input.equals("Q"));
     }
 }
